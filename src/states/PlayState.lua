@@ -191,6 +191,13 @@ function PlayState:update(dt)
                         self:calculateMatches()
                     end)
                 end
+
+                 -- SWAP UPDATE: RESETS the board until there's a possible tile match/es
+                 while not self.board:matchExists() do
+                    -- RESHUFFLES the board
+                    self.board = nil
+                    self.board = Board(VIRTUAL_WIDTH - 272, 16, self.level)
+                end
             end
         end
     end

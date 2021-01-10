@@ -255,6 +255,91 @@ function Board:getFallingTiles()
     return tweens
 end
 
+-- SWAP UPDATE: Board:swap and Board:matchExists functions added
+
+function Board:swap(tile_1, tile_2)
+
+    -- Swap grid positions of tiles
+    local tempX, tempY = tile_2.gridX, tile_2.gridY
+    local temp_Tile =tile_2
+
+    tile_2.gridX, tile_2.gridY = tile_1.gridX, tile_1.gridY
+
+    tile_1.gridX, tile_1.gridY = tempX, tempY
+
+    -- Swap tiles in the tiles table
+    self.tiles[tempY][tempX] = tile_1
+    self.tiles[tile_2.gridY][tile_2.gridX] = tile_2
+
+end
+
+function Board:matchExists()
+
+    for y = 1, 8 do
+
+        for x = 1, 8 do
+
+            temp_1 = self.tiles[y][x]
+
+            if x - 1 >= 1 then                          -- checks the tile to the LEFT
+                temp_2 = self.tiles[y][x - 1]
+                self:swap(temp_1, temp_2)
+
+                if self: calculateMatches() then        -- CALCULATES the match from swap
+
+                    self:swap(temp_1, temp_2)          -- RETURN the tiles from swap
+                    return true
+                end
+
+                self:swap(temp_1, temp_2)
+            end
+
+            if x + 1 <= 8 then                           -- checks the tile to the RIGHT
+                temp_2 = self.tiles[y][x + 1]
+                self:swap(temp_1, temp_2)
+                
+                if self: calculateMatches() then       
+                    self:swap(temp_1, temp_2)          
+                    return true
+                end
+
+                self:swap(temp_1, temp_2)
+            end
+
+            if y - 1 >= 1 then                          -- checks the tile ABOVE
+                temp_2 = self.tiles[y - 1][x]
+                self:swap(temp_1, temp_2)
+
+                if self: calculateMatches() then
+
+                    self:swap(temp_1, temp_2)
+                    return true
+                end
+
+                self:swap(temp_1, temp_2)
+            end
+
+            if y + 1 <= 8 then                          -- check the tile BELOW
+                temp_2 = self.tiles[y + 1][x]
+                self:swap(temp_1, temp_2)
+
+                if self: calculateMatches() then
+
+                    self:swap(temp_1, temp_2)
+                    return true
+                end
+
+                self:swap(temp_1, temp_2)
+            end
+
+        end
+
+    end
+
+    return false
+
+end
+
 function Board:render()
     for y = 1, #self.tiles do
         for x = 1, #self.tiles[1] do
