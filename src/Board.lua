@@ -13,10 +13,12 @@
 
 Board = Class{}
 
-function Board:init(x, y)
+function Board:init(x, y, level)
     self.x = x
     self.y = y
     self.matches = {}
+    
+    self.level = level
 
     self:initializeTiles()
 end
@@ -32,7 +34,7 @@ function Board:initializeTiles()
         for tileX = 1, 8 do
             
             -- create a new tile at X,Y with a random color and variety
-            table.insert(self.tiles[tileY], Tile(tileX, tileY, math.random(18), math.random(6)))
+            table.insert(self.tiles[tileY], Tile(tileX, tileY, math.random(18), math.random(math.min(6, self.level))))
         end
     end
 
@@ -161,6 +163,22 @@ function Board:calculateMatches()
     return #self.matches > 0 and self.matches or false
 end
 
+--[[ 
+    Gain more score each level based on variety present in
+]]
+function Board:calculateVariety()
+    local points = 0
+
+    for k, match in pairs(self.matches) do
+        for k, tile in pairs(match) do
+            if tile.variety > 1 then
+                points = tile.variety * 50 
+            end
+        end
+    end
+    return points
+end
+
 --[[
     Remove the matches from the Board by just setting the Tile slots within
     them to nil, then setting self.matches to nil.
@@ -240,7 +258,7 @@ function Board:getFallingTiles()
             if not tile then
 
                 -- new tile with random color and variety
-                local tile = Tile(x, y, math.random(18), math.random(6))
+                local tile = Tile(x, y, math.random(18), math.random(math.min(6, self.level)))
                 tile.y = -32
                 self.tiles[y][x] = tile
 
