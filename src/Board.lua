@@ -75,26 +75,10 @@ function Board:calculateMatches()
                 -- if we have a match of 3 or more up to now, add it to our matches table
                 if matchNum >= 3 then
                     local match = {}
-                    local deleteRow = false
 
                     -- go backwards from here by matchNum
-                    -- SHINY UPDATE: first check for shiny tile in match
                     for x2 = x - 1, x - matchNum, -1 do
-                        if self.tiles[y][x2].shiny then
-                            deleteRow = true
-                            break
-                        end
-                    end
-
-                    -- SHINY UPDATE: add row to match
-                    if deleteRow then
-                        match - self.deleteRow(y)
-
-                    else
-                        -- SHINY UPDATE: add each tile to the match that's in that match
-                        for x2 = x - 1, x - matchNum, -1 do
-                            table.insert( match, self.tiles[y][x2])
-                        end
+                        
                     end
 
                     -- add this match to our total matches table
@@ -352,15 +336,6 @@ function Board:matchExists()
 
     return false
 
-end
-
--- SHINY UPDATE: update particles
-function Board:update()
-    for y = 1, #self.tiles do
-        for x = 1, #self.tiles[1] do
-            self.tiles[y][x]:update(dt)
-        end
-    end
 end
 
 function Board:render()

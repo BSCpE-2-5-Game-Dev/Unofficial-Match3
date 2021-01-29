@@ -27,23 +27,6 @@ function Tile:init(x, y, color, variety)
     self.color = color
     self.variety = variety
 
-    -- SHINY UPDATE
-    self.shiny = math((math.random(100) <= 10)) -- 10% chance every tile to be "shiny"
-
-    self.p_system = love.graphics.newParticleSystem(gTextures['particle', 32])
-    self.p_system:setParticleLifetime(1, 5)
-    
-    self.p_system:setAreaSpread('normal', 6, 6)
-
-    -- golden glitters
-    self.p_system:setColors(251, 242, 54, 100), 251, 242, 54, 0)
-
-    -- spawn glitters every 0.1 seconds
-    if self.shiny then
-        Timer.every(0.1, function(
-            self.p_system:emit(32)
-        end)
-    end
 end
 
 -- update the particle system with delta time
@@ -62,9 +45,4 @@ function Tile:render(x, y)
     love.graphics.setColor(255, 255, 255, 255)
     love.graphics.draw(gTextures['main'], gFrames['tiles'][self.color][self.variety],
         self.x + x, self.y + y)
-
-    -- draw particles in the middle of the tile 
-    if self.shiny then
-        love.graphics.draw(self.p_system, self.x + x + 16, self.y + y + 16)
-    end
 end
