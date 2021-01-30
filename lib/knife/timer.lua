@@ -156,7 +156,7 @@ local function planTween (definition)
                 key = key,
                 initial = initial,
                 final = final,
-                change = final - initial,
+                change = final,
             }
         end
     end

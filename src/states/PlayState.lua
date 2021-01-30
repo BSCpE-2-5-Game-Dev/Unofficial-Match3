@@ -39,6 +39,7 @@ function PlayState:init()
     self.score = 0
     self.timer = 60
 
+    self.noMatchLabel_Y = -64
     -- set our Timer class to turn cursor highlight on and off
     Timer.every(0.5, function()
         self.rectHighlighted = not self.rectHighlighted
@@ -142,41 +143,51 @@ function PlayState:update(dt)
                 gSounds['error']:play()
                 self.highlightedTile = nil
             else
-                
-                -- swap grid positions of tiles
-                local tempX = self.highlightedTile.gridX
-                local tempY = self.highlightedTile.gridY
-
-                local newTile = self.board.tiles[y][x]
-
-                self.highlightedTile.gridX = newTile.gridX
-                self.highlightedTile.gridY = newTile.gridY
-                newTile.gridX = tempX
-                newTile.gridY = tempY
-
-                -- swap tiles in the tiles table
-                self.board.tiles[self.highlightedTile.gridY][self.highlightedTile.gridX] =
-                    self.highlightedTile
-
-                self.board.tiles[newTile.gridY][newTile.gridX] = newTile
-
-                
-                    -- tween coordinates between the two so they swap
-                    Timer.tween(0.1, {
-                        [self.highlightedTile] = {x = newTile.x, y = newTile.y},
-                        [newTile] = {x = self.highlightedTile.x, y = self.highlightedTile.y}
-                    })
-                    -- once the swap is finished, we can tween falling blocks as needed	                   
-                    :finish(function()	                   
-                        self:calculateMatches()	                       
-                end)
-                
+                -- SWAP UPDATE 
+               self:swap_Tiles(self.highlightedTile, self.board.tiles[y][x], true)
             end
         end
     end
-
     Timer.update(dt)
 end
+
+--[[    ***SWAP UPDATE***
+        Swap two tiles.
+        The 'swapBackon_NoMatch' parameter controls whether the tiles are swapped backed if there's no match.
+]]
+
+function PlayState:swap_Tiles(tile_1, tile_2, swapBackon_NoMatch)
+
+    self.board:swap_Tiles(tile_1, tile_2)
+
+    if swapBackon_NoMatch then
+        -- tween coordinates between the two so they swap
+        Timer.tween(0.1, {
+            [tile_1] = {x = tile_2.x, y = tile_2.y},
+            [tile_2] = {x = tile_1.x, y = tile_1.y}
+        })
+
+        -- once the swap is finished, we can tween falling blocks as needed
+        :finish( function()
+            local matches = self.board:calculateMatches()
+            if matches then
+                self:calculateMatches(matches)
+            else
+
+                -- if no match, swap back
+                self:swap_Tiles(tile_1, tile_2, false)
+                self.highlightedTile = nil
+                gSounds['error']:play()
+            end
+        end)
+    else
+        -- tween coordinates between the two as they swap
+        Timer.tween(0.1, {
+            [tile_1] = {x = tile_2.x, y = tile_2.y},
+            [tile_2] = {x = tile_1.x, y = tile_1.y}
+        })
+    end
+end -- SWAP UPDATE (END)
 
 --[[
     Calculates whether any matches were found on the board and tweens the needed
@@ -184,11 +195,11 @@ end
     have matched and replaces them with new randomized tiles, deferring most of this
     to the Board class.
 ]]
-function PlayState:calculateMatches()
+function PlayState:calculateMatches(calculateMatches)
     self.highlightedTile = nil
 
     -- if we have any matches, remove them and tween the falling blocks that result
-    local matches = self.board:calculateMatches()
+    local matches = calculatedMatches or  self.board:calculateMatches()
     
     if matches then
         gSounds['match']:stop()
@@ -216,6 +227,37 @@ function PlayState:calculateMatches()
             self:calculateMatches()
         end)
     
+    -- SWAP UDPATE (START)
+    if not self.board:any_Matches() then
+        self.no_Matches = true
+        gSounds['error']:play()
+
+        -- start a transition of the text label to the center of the screen over 0.5 seconds
+        Timer.tween(0.5, {
+            [self] = {noMatchLabel_Y = VIRTUAL_HEIGHT / 2 - 8}
+        })
+        
+        -- after that, pause for one second with Timer.after
+        :finish(function()
+            Timer.after(2, function()
+            
+                -- then animate the label going down past the bottom edge
+                Timer.tween(0.5, {
+                    [self] = {noMatchLabel_Y = VIRTUAL_HEIGHT + 30}
+                })
+
+                -- once that's complete, reload the board
+                :finish(function()
+                    while not self.board:any_Matches() do
+                        self.board = Board(VIRTUAL_WIDTH - 272, 16, self.level)
+                    end
+                    self.no_Matches = false
+                end)
+            end)
+        end)
+
+    end -- SWAP UDPATE (END)
+
     -- if no matches, we can continue playing
     else
         self.canInput = true
@@ -262,4 +304,14 @@ function PlayState:render()
     love.graphics.printf('Score: ' .. tostring(self.score), 20, 52, 182, 'center')
     love.graphics.printf('Goal : ' .. tostring(self.scoreGoal), 20, 80, 182, 'center')
     love.graphics.printf('Timer: ' .. tostring(self.timer), 20, 108, 182, 'center')
+
+    -- SWAP UPDATE: if board has no matches, render a text and background rectangle
+    if self.no_Matches then
+        love.graphics.setColor(95/255, 205/255, 228/255, 200/255)
+        love.graphics.rectangle('fill', 0, self.noMatchLabel_Y - 8, VIRTUAL_WIDTH, 32)
+        love.graphics.setColor(255/255, 255/255, 255/255, 255/255)
+        love.graphics.setFont(gFonts['medium'])
+        love.graphics.printf('No more Matches! Board Reloading...',
+        0, self.noMatchLabel_Y, VIRTUAL_WIDTH, 'center')
+    end
 end

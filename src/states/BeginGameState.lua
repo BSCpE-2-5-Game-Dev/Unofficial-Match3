@@ -31,6 +31,14 @@ function BeginGameState:enter(def)
     -- grab level # from the def we're passed
     self.level = def.level
 
+    -- SWAP UPDATE: spawn a board and placed it toward the right
+    self.board = Board(VIRTUAL_WIDTH - 272, 16, self.level)
+
+    -- SWAP UPDATE: ensure a board with possible matches
+    while not self.board:any_Matches() do
+        self.board = Board(VIRTUAL_WIDTH - 272, 16, self.level)
+    end
+
     --
     -- animate our white screen fade-in, then animate a drop-down with
     -- the level text

@@ -256,6 +256,86 @@ function Board:getFallingTiles()
     return tweens
 end
 
+-- SWAP UPDATE (START)
+
+function Board:swap_Tiles(tile_1, tile_2)
+    
+    -- swap grid positions of tiles
+    local temp_X = tile_1.gridX
+    local temp_Y = tile_1.gridY
+
+    tile_1.gridX = tile_2.gridX
+    tile_1.gridY = tile_2.gridY
+    tile_2.gridX = temp_X
+    tile_2.gridY = temp_Y
+
+    -- swap tiles in the tiles table
+    self.tiles[tile_1.gridY][tile_1.gridX] = tile_1
+    self.tiles[tile_2.gridY][tile_2.gridX] = tile_2
+
+end
+
+-- [[ Checks whether there are any possible matches across the board. ]]
+
+function Board:any_Matches()
+
+    for y = 1, 8 do
+
+        for x = 1, 8 do
+
+            -- left tile swap
+
+            if x > 1 then
+
+                self:swap_Tiles(self.tiles[y][x], self.tiles[y][x - 1])
+                if self:calculateMatches() then
+                    self:swap_Tiles(self.tiles[y][x], self.tiles[y][x - 1])
+                    return true
+                end
+                self:swap_Tiles(self.tiles[y][x], self.tiles[y][x - 1])
+            end
+
+             -- right tile swap
+
+             if x < 8 then
+
+                self:swap_Tiles(self.tiles[y][x], self.tiles[y][x + 1])
+                if self:calculateMatches() then
+                    self:swap_Tiles(self.tiles[y][x], self.tiles[y][x + 1])
+                    return true
+                end
+                self:swap_Tiles(self.tiles[y][x], self.tiles[y][x + 1])
+            end
+
+            -- top tile swap
+
+            if y > 1 then
+
+                self:swap_Tiles(self.tiles[y][x], self.tiles[y - 1][x])
+                if self:calculateMatches() then
+                    self:swap_Tiles(self.tiles[y][x], self.tiles[y - 1][x])
+                    return true
+                end
+                self:swap_Tiles(self.tiles[y][x], self.tiles[y - 1][x])
+            end
+
+            -- bottom tile swap
+
+            if y < 8 then
+
+                self:swap_Tiles(self.tiles[y][x], self.tiles[y + 1][x])
+                if self:calculateMatches() then
+                    self:swap_Tiles(self.tiles[y][x], self.tiles[y + 1][x])
+                    return true
+                end
+                self:swap_Tiles(self.tiles[y][x], self.tiles[y + 1][x])
+            end
+        end
+    end
+    return false
+end
+-- SWAP UPDATE (END)
+
 function Board:render()
     for y = 1, #self.tiles do
         for x = 1, #self.tiles[1] do
@@ -263,3 +343,4 @@ function Board:render()
         end
     end
 end
+
